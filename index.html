@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>여행 리뷰 분석 실험</title>
+  <title>여행 리뷰 분석 실험 v2</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -9,41 +9,103 @@
     }
     textarea {
       width: 100%;
-      height: 100px;
+      height: 150px;
     }
     button {
       padding: 10px 15px;
       margin-top: 10px;
     }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    th {
+      background-color: #f4f4f4;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
-  <h1>여행 리뷰 AI 실험</h1>
+  <h1>여행 리뷰 AI 실험 v2</h1>
 
-  <p>여행 리뷰를 입력하세요:</p>
-  <textarea id="review"></textarea>
+  <p>여러 개의 여행 리뷰를 줄바꿈으로 나눠서 입력해보세요:</p>
+  <p style="font-size: 0.9rem; color: #555;">
+    예시)<br>
+    위치도 좋고 직원들이 정말 친절했어요.<br>
+    방은 깨끗했지만 소음이 너무 심했습니다.
+  </p>
+
+  <textarea id="reviews"></textarea>
   <br>
-  <button onclick="analyze()">분석하기</button>
+  <button onclick="analyzeAll()">모두 분석하기</button>
 
   <h2>결과:</h2>
   <div id="output"></div>
 
   <script>
-    function analyze() {
-      const text = document.getElementById("review").value;
-
+    // 한 줄(한 리뷰)에 대한 점수 계산 함수
+    function scoreReview(text) {
       let score = 50; // 기본 점수
 
       if (text.includes("좋") || text.includes("추천") || text.includes("만족")) score += 20;
       if (text.includes("최고") || text.includes("완벽")) score += 20;
+
       if (text.includes("별로") || text.includes("실망") || text.includes("최악")) score -= 20;
-      if (text.includes("비쌌") || text.includes("불편")) score -= 10;
+      if (text.includes("비쌌") || text.includes("불편") || text.includes("시끄럽") || text.includes("소음")) score -= 10;
 
-      if(score > 100) score = 100;
-      if(score < 0) score = 0;
+      if (score > 100) score = 100;
+      if (score < 0) score = 0;
 
-      document.getElementById("output").innerText = 
-        "AI 판단 점수: " + score + "점";
+      return score;
+    }
+
+    // 여러 개 리뷰를 한꺼번에 분석
+    function analyzeAll() {
+      const raw = document.getElementById("reviews").value.trim();
+      const lines = raw.split(/\n+/).map(l => l.trim()).filter(l => l.length > 0);
+
+      if (lines.length === 0) {
+        document.getElementById("output").innerText = "리뷰를 한 줄 이상 입력해주세요.";
+        return;
+      }
+
+      let total = 0;
+      let rows = "";
+
+      lines.forEach((review, idx) => {
+        const s = scoreReview(review);
+        total += s;
+        rows += `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${review}</td>
+            <td>${s}점</td>
+          </tr>
+        `;
+      });
+
+      const avg = Math.round(total / lines.length);
+
+      document.getElementById("output").innerHTML = `
+        <p>총 ${lines.length}개의 리뷰, 평균 점수: <strong>${avg}점</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>리뷰 내용</th>
+              <th>점수</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
     }
   </script>
 </body>
