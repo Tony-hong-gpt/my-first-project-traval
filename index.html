@@ -1,10 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>나의 첫 실험 페이지</title>
+  <title>여행 리뷰 분석 실험</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+    }
+    button {
+      padding: 10px 15px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Github 실험 시작</h1>
-  <p>ChatGPT와 함께 웹 만들기 연습 중</p>
+  <h1>여행 리뷰 AI 실험</h1>
+
+  <p>여행 리뷰를 입력하세요:</p>
+  <textarea id="review"></textarea>
+  <br>
+  <button onclick="analyze()">분석하기</button>
+
+  <h2>결과:</h2>
+  <div id="output"></div>
+
+  <script>
+    function analyze() {
+      const text = document.getElementById("review").value;
+
+      let score = 50; // 기본 점수
+
+      if (text.includes("좋") || text.includes("추천") || text.includes("만족")) score += 20;
+      if (text.includes("최고") || text.includes("완벽")) score += 20;
+      if (text.includes("별로") || text.includes("실망") || text.includes("최악")) score -= 20;
+      if (text.includes("비쌌") || text.includes("불편")) score -= 10;
+
+      if(score > 100) score = 100;
+      if(score < 0) score = 0;
+
+      document.getElementById("output").innerText = 
+        "AI 판단 점수: " + score + "점";
+    }
+  </script>
 </body>
 </html>
