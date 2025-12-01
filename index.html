@@ -51,14 +51,13 @@
   <div id="output"></div>
 
   <script>
-    // 한 리뷰에 대한 점수 계산
+    // 1. 한 리뷰에 대한 점수 계산
     function scoreReview(text) {
       let score = 50; // 기본 점수
 
       // 긍정 단어
       if (text.includes("좋") || text.includes("추천") || text.includes("만족")) score += 20;
       if (text.includes("최고") || text.includes("완벽")) score += 20;
-      if (text.includes("친절") || text.includes("맛있")| text.includes("가깝")) score += 10;
 
       // 부정 단어
       if (text.includes("별로") || text.includes("실망") || text.includes("최악")) score -= 20;
@@ -69,7 +68,7 @@
       return score;
     }
 
-    // 키워드 추출
+    // 2. 키워드 추출
     function extractKeywords(text) {
       const positive = ["좋", "만족", "편안", "친절", "최고", "기분"];
       const negative = ["별로", "불편", "실망", "비쌌", "소음", "시끄럽", "좁", "더럽"];
@@ -93,39 +92,55 @@
       };
     }
 
-    // 🔽🔽🔽 여기부터 새로 추가 🔽🔽🔽
-function summarizeReview(kw, score) {
-  let tone = "";
+    // 3. 감정 요약 한 줄 생성
+    function summarizeReview(kw, score) {
+      let tone = "";
 
-  // 감정 톤 결정
-  if (kw.positive.length > 0 && kw.negative.length === 0) {
-    tone = "전반적으로 긍정적인 리뷰입니다.";
-  } else if (kw.negative.length > 0 && kw.positive.length === 0) {
-    tone = "전반적으로 부정적인 리뷰입니다.";
-  } else if (kw.positive.length > 0 && kw.negative.length > 0) {
-    tone = "좋은 점과 아쉬운 점이 함께 있는 리뷰입니다.";
-  } else {
-    tone = "감정 표현이 뚜렷하지 않은 리뷰입니다.";
-  }
+      // 감정 톤 결정
+      if (kw.positive.length > 0 && kw.negative.length === 0) {
+        tone = "전반적으로 긍정적인 리뷰입니다.";
+      } else if (kw.negative.length > 0 && kw.positive.length === 0) {
+        tone = "전반적으로 부정적인 리뷰입니다.";
+      } else if (kw.positive.length > 0 && kw.negative.length > 0) {
+        tone = "좋은 점과 아쉬운 점이 함께 있는 리뷰입니다.";
+      } else {
+        tone = "감정 표현이 뚜렷하지 않은 리뷰입니다.";
+      }
 
-  // 어떤 요소에 대한 내용인지 정리
-  const aspects = [];
-  if (kw.location.length > 0) aspects.push("위치");
-  if (kw.service.length > 0) aspects.push("서비스");
-  if (kw.facility.length > 0) aspects.push("시설");
-  if (kw.price.length > 0) aspects.push("가격");
+      // 어떤 요소에 대한 내용인지 정리
+      const aspects = [];
+      if (kw.location.length > 0) aspects.push("위치");
+      if (kw.service.length > 0) aspects.push("서비스");
+      if (kw.facility.length > 0) aspects.push("시설");
+      if (kw.price.length > 0) aspects.push("가격");
 
-  let aspectText = "";
-  if (aspects.length > 0) {
-    aspectText = aspects.join(", ") + "에 대한 내용입니다.";
-  }
+      let aspectText = "";
+      if (aspects.length > 0) {
+        aspectText = aspects.join(", ") + "에 대한 내용입니다.";
+      }
 
-  // 두 문장을 하나로 합쳐 반환
-  return (tone + " " + aspectText).trim();
-}
-    // 🔼🔼🔼 여기까지 새로 추가 🔼🔼🔼
-    
-    // 여러 리뷰를 한꺼번에 분석
+      return (tone + " " + aspectText).trim();
+    }
+
+    // 4. 키워드 배열을 태그 모양 HTML로 변환
+    function renderTags(words, bgColor) {
+      if (!words || words.length === 0) {
+        return '<span style="font-size:0.8rem; color:#999;">없음</span>';
+      }
+
+      return words
+        .map(w => `<span style="
+          display:inline-block;
+          padding:2px 6px;
+          margin:2px 4px 2px 0;
+          border-radius:999px;
+          background-color:${bgColor};
+          font-size:0.8rem;
+        ">${w}</span>`)
+        .join("");
+    }
+
+    // 5. 여러 리뷰를 한꺼번에 분석
     function analyzeAll() {
       const raw = document.getElementById("reviews").value.trim();
       const lines = raw
@@ -146,7 +161,7 @@ function summarizeReview(kw, score) {
         const score = scoreReview(review);
         const kw = extractKeywords(review);
         const length = review.length;
-        const summary = summarizeReview(kw, score);   // ← ★ 새로 추가
+        const summary = summarizeReview(kw, score);
 
         totalScore += score;
         totalLength += length;
@@ -166,12 +181,12 @@ function summarizeReview(kw, score) {
             <td style="color: ${scoreColor}; font-weight: bold;">${score}점</td>
             <td>${length}</td>
             <td>
-              <strong>긍정:</strong> ${kw.positive.join(", ") || "없음"}<br>
-              <strong>부정:</strong> ${kw.negative.join(", ") || "없음"}<br>
-              <strong>시설:</strong> ${kw.facility.join(", ") || "없음"}<br>
-              <strong>서비스:</strong> ${kw.service.join(", ") || "없음"}<br>
-              <strong>위치:</strong> ${kw.location.join(", ") || "없음"}<br>
-              <strong>가격:</strong> ${kw.price.join(", ") || "없음"}
+              <div><strong>긍정:</strong> ${renderTags(kw.positive, "#e6f4ea")}</div>
+              <div><strong>부정:</strong> ${renderTags(kw.negative, "#fdecea")}</div>
+              <div><strong>시설:</strong> ${renderTags(kw.facility, "#e8f0fe")}</div>
+              <div><strong>서비스:</strong> ${renderTags(kw.service, "#fff4e5")}</div>
+              <div><strong>위치:</strong> ${renderTags(kw.location, "#e0f7fa")}</div>
+              <div><strong>가격:</strong> ${renderTags(kw.price, "#f3e5f5")}</div>
             </td>
             <td>${summary}</td>
           </tr>
