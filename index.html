@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8" />
   <title>여행 리뷰 분석 실험 v2</title>
   <style>
     body {
@@ -14,6 +15,7 @@
     button {
       padding: 10px 15px;
       margin-top: 10px;
+      cursor: pointer;
     }
     table {
       width: 100%;
@@ -23,6 +25,7 @@
     th, td {
       border: 1px solid #ddd;
       padding: 8px;
+      vertical-align: top;
     }
     th {
       background-color: #f4f4f4;
@@ -47,118 +50,123 @@
   <h2>결과:</h2>
   <div id="output"></div>
 
-<script>
-  // 점수 계산
-  function scoreReview(text) {
-    let score = 50;
+  <script>
+    // 한 리뷰에 대한 점수 계산
+    function scoreReview(text) {
+      let score = 50; // 기본 점수
 
-    if (text.includes("좋") || text.includes("추천") || text.includes("만족")) score += 20;
-    if (text.includes("최고") || text.includes("완벽")) score += 20;
+      // 긍정 단어
+      if (text.includes("좋") || text.includes("추천") || text.includes("만족")) score += 20;
+      if (text.includes("최고") || text.includes("완벽")) score += 20;
 
-    if (text.includes("별로") || text.includes("실망") || text.includes("최악")) score -= 20;
-    if (text.includes("비쌌") || text.includes("불편") || text.includes("시끄럽") || text.includes("소음")) score -= 10;
+      // 부정 단어
+      if (text.includes("별로") || text.includes("실망") || text.includes("최악")) score -= 20;
+      if (text.includes("비쌌") || text.includes("불편") || text.includes("시끄럽") || text.includes("소음")) score -= 10;
 
-    if (score > 100) score = 100;
-    if (score < 0) score = 0;
-    return score;
-  }
-
-  // 키워드 추출
-  function extractKeywords(text) {
-    const positive = ["좋", "만족", "편안", "친절", "최고", "기분"];
-    const negative = ["별로", "불편", "실망", "비쌌", "소음", "시끄럽", "좁", "더럽"];
-    
-    const facility = ["방", "룸", "화장실", "침대", "청소", "시설", "욕실"];
-    const service = ["직원", "응대", "서비스", "친절"];
-    const location = ["위치", "교통", "역", "근처"];
-    const price = ["가격", "가성비", "비싸", "저렴"];
-
-    function findMatches(words) {
-      return words.filter(w => text.includes(w));
+      if (score > 100) score = 100;
+      if (score < 0) score = 0;
+      return score;
     }
 
-    return {
-      positive: findMatches(positive),
-      negative: findMatches(negative),
-      facility: findMatches(facility),
-      service: findMatches(service),
-      location: findMatches(location),
-      price: findMatches(price)
-    };
-  }
+    // 키워드 추출
+    function extractKeywords(text) {
+      const positive = ["좋", "만족", "편안", "친절", "최고", "기분"];
+      const negative = ["별로", "불편", "실망", "비쌌", "소음", "시끄럽", "좁", "더럽"];
 
-  // 전체 리뷰 분석
-  function analyzeAll() {
-    const raw = document.getElementById("reviews").value.trim();
-    const lines = raw.split(/\n+/).map(l => l.trim()).filter(l => l.length > 0);
+      const facility = ["방", "룸", "화장실", "침대", "청소", "시설", "욕실"];
+      const service = ["직원", "응대", "서비스", "친절"];
+      const location = ["위치", "교통", "역", "근처"];
+      const price = ["가격", "가성비", "비싸", "저렴"];
 
-    if (lines.length === 0) {
-      document.getElementById("output").innerHTML = "<p>리뷰를 입력해주세요.</p>";
-      return;
-    }
-
-    let total = 0;
-    let rows = "";
-    let totalLength = 0;
-
-    lines.forEach((review, idx) => {
-      const score = scoreReview(review);
-      const kw = extractKeywords(review);
-      const length = review.length;
-
-      total += score;
-      totalLength += length;
-
-      // 점수에 따라 색상 결정
-      let scoreColor = "black";
-      if (score >= 80) {
-        scoreColor = "green";
-      } else if (score <= 50) {
-        scoreColor = "red";
+      function findMatches(words) {
+        return words.filter(w => text.includes(w));
       }
 
-      rows += `
-        <tr>
-          <td>${idx + 1}</td>
-          <td>${review}</td>
-          <td style="color: ${scoreColor}; font-weight: bold;">${score}점</td>
-          <td>${length}</td>
-          <td>
-            <strong>긍정:</strong> ${kw.positive.join(", ") || "없음"}<br>
-            <strong>부정:</strong> ${kw.negative.join(", ") || "없음"}<br>
-            <strong>시설:</strong> ${kw.facility.join(", ") || "없음"}<br>
-            <strong>서비스:</strong> ${kw.service.join(", ") || "없음"}<br>
-            <strong>위치:</strong> ${kw.location.join(", ") || "없음"}<br>
-            <strong>가격:</strong> ${kw.price.join(", ") || "없음"}
-          </td>
-        </tr>
-      `;
-    });
+      return {
+        positive: findMatches(positive),
+        negative: findMatches(negative),
+        facility: findMatches(facility),
+        service: findMatches(service),
+        location: findMatches(location),
+        price: findMatches(price)
+      };
+    }
 
-    const avg = Math.round(total / lines.length);
-    const avgLength = Math.round(totalLength / lines.length);
+    // 여러 리뷰를 한꺼번에 분석
+    function analyzeAll() {
+      const raw = document.getElementById("reviews").value.trim();
+      const lines = raw
+        .split(/\n+/)
+        .map(l => l.trim())
+        .filter(l => l.length > 0);
 
-    document.getElementById("output").innerHTML = `
-      <p>총 ${lines.length}개의 리뷰, 평균 점수: <strong>${avg}점</strong><br>
-      평균 리뷰 길이: <strong>${avgLength}글자</strong></p>
-      <table>
-        <thead>
+      if (lines.length === 0) {
+        document.getElementById("output").innerHTML = "<p>리뷰를 입력해주세요.</p>";
+        return;
+      }
+
+      let totalScore = 0;
+      let totalLength = 0;
+      let rows = "";
+
+      lines.forEach((review, idx) => {
+        const score = scoreReview(review);
+        const kw = extractKeywords(review);
+        const length = review.length;
+
+        totalScore += score;
+        totalLength += length;
+
+        // 점수에 따라 색상 결정
+        let scoreColor = "black";
+        if (score >= 80) {
+          scoreColor = "green";
+        } else if (score <= 50) {
+          scoreColor = "red";
+        }
+
+        rows += `
           <tr>
-            <th>#</th>
-            <th>리뷰 내용</th>
-            <th>점수</th>
-            <th>글자수</th>
-            <th>키워드 분석</th>
+            <td>${idx + 1}</td>
+            <td>${review}</td>
+            <td style="color: ${scoreColor}; font-weight: bold;">${score}점</td>
+            <td>${length}</td>
+            <td>
+              <strong>긍정:</strong> ${kw.positive.join(", ") || "없음"}<br>
+              <strong>부정:</strong> ${kw.negative.join(", ") || "없음"}<br>
+              <strong>시설:</strong> ${kw.facility.join(", ") || "없음"}<br>
+              <strong>서비스:</strong> ${kw.service.join(", ") || "없음"}<br>
+              <strong>위치:</strong> ${kw.location.join(", ") || "없음"}<br>
+              <strong>가격:</strong> ${kw.price.join(", ") || "없음"}
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
-    `;
-  }
-</script>
+        `;
+      });
 
+      const avgScore = Math.round(totalScore / lines.length);
+      const avgLength = Math.round(totalLength / lines.length);
 
+      document.getElementById("output").innerHTML = `
+        <p>
+          총 ${lines.length}개의 리뷰, 평균 점수: <strong>${avgScore}점</strong><br>
+          평균 리뷰 길이: <strong>${avgLength}글자</strong>
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>리뷰 내용</th>
+              <th>점수</th>
+              <th>글자수</th>
+              <th>키워드 분석</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+    }
+  </script>
 </body>
 </html>
