@@ -385,7 +385,35 @@
       if (score <= 40) return "😟";
       return "😐";
     }
-
+    // JS에 새로운 함수 추가(Day 2 Step 1)
+    function credibilityScore(text) {
+    let score = 50;
+  
+    // 1) 리뷰 길이 기반
+    if (text.length < 10) score -= 20;
+    if (text.length > 80) score += 10;
+  
+    // 2) 구체적 단어 포함 여부
+    const detailWords = ["가격", "위치", "소음", "침대", "청소", "서비스", "직원", "주차", "지하철"];
+    if (detailWords.some(w => text.includes(w))) score += 10;
+  
+    // 3) 숫자 포함 → 신뢰도 증가
+    if (/\d/.test(text)) score += 10;
+  
+    // 4) 감탄사/강조 부사 반복 → 신뢰도 감소
+    const hypeWords = ["정말", "완전", "최고", "최악", "진짜", "엄청"];
+    let hypeCount = hypeWords.filter(w => text.includes(w)).length;
+    if (hypeCount >= 2) score -= 15;
+  
+    // 5) 동일 단어 반복 → 광고성 리뷰 가능성
+    const wordSet = new Set(text.split(""));
+    if (wordSet.size < text.length / 2.5) score -= 10;
+  
+    if (score > 100) score = 100;
+    if (score < 0) score = 0;
+    return score;
+    }
+    
     // 5. 전체 분석 + 카드 UI 출력
     function analyzeAll() {
       const raw = document.getElementById("reviews").value.trim();
@@ -402,6 +430,7 @@
 
       let totalScore = 0;
       let totalLength = 0;
+      let totalCred = 0;    // 🆕 신뢰도 합계
       let cardsHtml = "";
 
       lines.forEach((review, idx) => {
@@ -409,9 +438,11 @@
         const kw = extractKeywords(review);
         const length = review.length;
         const summary = summarizeReview(kw, score);
+        const credibility = credibilityScore(review);   // 🆕 이 줄 추가
 
         totalScore += score;
         totalLength += length;
+        totalCred += credibility;                       // 🆕 신뢰도 합산
 
         let moodClass = "card--neutral";
         let scoreClass = "score-pill--neutral";
@@ -436,6 +467,9 @@
 
             <div class="meta-row">
               <strong>글자수</strong> ${length}자
+            </div>
+            <div class="meta-row">                       <!-- 🆕 추가 -->
+              <strong>신뢰도</strong> ${credibility}점
             </div>
 
             <div class="tag-group">
@@ -472,11 +506,14 @@
 
       const avgScore = Math.round(totalScore / lines.length);
       const avgLength = Math.round(totalLength / lines.length);
+      const avgCred = Math.round(totalCred / lines.length);   // 🆕 추가
 
       document.getElementById("output").innerHTML = `
         <div class="summary-bar">
-          총 ${lines.length}개의 리뷰, 평균 점수: <strong>${avgScore}점</strong>,
-          평균 리뷰 길이: <strong>${avgLength}글자</strong>
+          총 ${lines.length}개의 리뷰, 
+          평균 점수: <strong>${avgScore}점</strong>,
+          평균 리뷰 길이: <strong>${avgLength}글자</strong>,
+          평균 신뢰도: <strong>${avgCred}점</strong>   <!-- 🆕 표시 -->
         </div>
         ${cardsHtml}
       `;
