@@ -111,7 +111,6 @@
       return score;
     }
 
-
     // 2. 키워드 추출
     function extractKeywords(text) {
       const positive = ["좋", "만족", "편안", "친절", "최고", "기분"];
@@ -189,7 +188,6 @@
         .join("");
     }
 
-
     // ⬇⬇⬇ 여기부터 새로 추가 ⬇⬇⬇
     function fillSample() {
       const sampleLines = [
@@ -204,7 +202,6 @@
       document.getElementById("reviews").value = sampleText;
     }
     // ⬆⬆⬆ 여기까지 새로 추가 ⬆⬆⬆
-
 
     // 5. 여러 리뷰를 한꺼번에 분석
     function analyzeAll() {
@@ -240,6 +237,13 @@
         scoreColor = "red";
       }
 
+      function scoreEmoji(score) {
+      if (score >= 80) return "😊";
+      if (score >= 60) return "🙂";
+      if (score >= 40) return "😐";
+      return "😢";
+      }
+
       // ⭐ 점수에 따라 카드 배경색도 결정
       let cardBg = "#ffffff"; // 기본 흰색
       if (score >= 80) {
@@ -254,7 +258,8 @@
             <div><strong>리뷰 내용:</strong> ${review}</div>
       
             <div class="card-score" style="color:${scoreColor};">
-              점수: ${score}점
+            -  점수: ${score}점
+            +  점수: ${score}점 ${scoreEmoji(score)}
             </div>
       
             <div>글자수: ${length}자</div>
