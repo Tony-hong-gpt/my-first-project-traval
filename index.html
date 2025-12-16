@@ -420,6 +420,19 @@ function summarizeReview(kw, score, credibility) {
     if (score < 0) score = 0;
     return score;
     }
+
+    function renderTags(words, bgColor) {
+    if (!words || words.length === 0) {
+      return '<span class="chip-empty">없음</span>';
+    }
+  
+    return words
+      .map(
+        (w) =>
+          `<span class="chip" style="background:${bgColor}; border-color:transparent;">${w}</span>`
+      )
+      .join("");
+  }
     
     // 5. 전체 분석 + 카드 UI 출력
     function analyzeAll() {
