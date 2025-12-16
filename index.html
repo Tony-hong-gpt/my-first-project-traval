@@ -14,6 +14,11 @@
       --red: #dc2626;
       --accent: #3b82f6;
     }
+    mark.hl {         // CSS에 하이라이트 스타일 추가/
+      background: #fde68a; /* 연한 노랑 */
+      padding: 0 2px;
+      border-radius: 4px;
+}
 
     * { box-sizing: border-box; }
 
@@ -267,6 +272,9 @@
         <option value="len_desc">글자수 긴 순</option>
         <option value="len_asc">글자수 짧은 순</option>
       </select>
+      <input id="searchQuery" placeholder="검색: 예) 위치, 소음, 친절"
+             oninput="onUiChange()"
+             style="padding:8px 12px; border-radius:999px; border:1px solid var(--border-subtle); font-size:0.9rem; outline:none; min-width:240px;">
 
       <select id="filterMode" onchange="onUiChange()">
         <option value="all">전체</option>
@@ -287,22 +295,25 @@
     const STORAGE_KEY = "travelReviewUI_v2";
 
     function saveUiState() {
-      const sortMode = document.getElementById("sortMode")?.value || "score_desc";
-      const filterMode = document.getElementById("filterMode")?.value || "all";
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ sortMode, filterMode }));
-    }
+        const sortMode = document.getElementById("sortMode")?.value || "score_desc";
+        const filterMode = document.getElementById("filterMode")?.value || "all";
+        const searchQuery = document.getElementById("searchQuery")?.value || "";
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ sortMode, filterMode, searchQuery }));
+      }
 
     function loadUiState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return;
-        const { sortMode, filterMode } = JSON.parse(raw);
-
+        const { sortMode, filterMode, searchQuery } = JSON.parse(raw);
+    
         const s = document.getElementById("sortMode");
         const f = document.getElementById("filterMode");
-
+        const q = document.getElementById("searchQuery");
+    
         if (s && sortMode) s.value = sortMode;
         if (f && filterMode) f.value = filterMode;
+        if (q && typeof searchQuery === "string") q.value = searchQuery;
       } catch (e) {}
     }
 
@@ -500,12 +511,53 @@
       return items; // all
     }
 
+  function normalize(s) {
+      return (s || "").toString().trim().toLowerCase();
+    }
+    
+    function applySearch(items) {
+      const q = normalize(document.getElementById("searchQuery")?.value);
+      if (!q) return items;
+    
+      return items.filter(x => {
+        const hay = [
+          x.review,
+          x.summary,
+          ...(x.kw.positive || []),
+          ...(x.kw.negative || []),
+          ...(x.kw.facility || []),
+          ...(x.kw.service || []),
+          ...(x.kw.location || []),
+          ...(x.kw.price || []),
+        ].join(" ").toLowerCase();
+    
+        return hay.includes(q);
+      });
+    }
+
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+    
+    function highlight(text) {
+      const q = normalize(document.getElementById("searchQuery")?.value);
+      if (!q) return text;
+    
+      const safe = escapeRegExp(q);
+      const re = new RegExp(safe, "gi");
+      return text.replace(re, (m) => `<mark class="hl">${m}</mark>`);
+    }
+    
     function renderResults() {
       if (!lastResults || lastResults.length === 0 || !lastStats) return;
 
       const sortMode = document.getElementById("sortMode")?.value || "score_desc";
 
       let view = applyFilter([...lastResults]);
+      view = applySearch(view);
+
+      <div class="review-text">${highlight(review)}</div>
+      <div class="card-summary">${highlight(summary)}</div>
 
       view.sort((a, b) => {
         switch (sortMode) {
