@@ -11,21 +11,15 @@
       --text-main: #111827;
       --text-sub: #6b7280;
       --green: #16a34a;
-      --green-soft: #ecfdf3;
       --red: #dc2626;
-      --red-soft: #fef2f2;
-      --neutral-soft: #f9fafb;
       --accent: #3b82f6;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        Arial, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
       background: radial-gradient(circle at top, #e0f2fe 0, #f3f4f6 40%, #eef2ff 100%);
       color: var(--text-main);
     }
@@ -94,6 +88,7 @@
       transform: translateY(-1px);
       box-shadow: 0 10px 22px rgba(37, 99, 235, 0.35);
     }
+
     .btn-secondary {
       background: #ffffff;
       color: var(--text-main);
@@ -131,13 +126,12 @@
       backdrop-filter: blur(10px);
     }
 
-    /* 점수에 따라 카드 배경 / 테두리 색 다르게 */
     .card--good {
       background: linear-gradient(135deg, #ecfdf3, #f0fdf4);
       border-color: rgba(22, 163, 74, 0.35);
     }
     .card--bad {
-      background: linear-gradient(135deg, #fef2f2, #fef2f2);
+      background: linear-gradient(135deg, #fef2f2, #fff);
       border-color: rgba(220, 38, 38, 0.28);
     }
     .card--neutral {
@@ -159,6 +153,12 @@
       color: var(--text-sub);
     }
 
+    .card-header-right{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
     .score-pill {
       padding: 4px 10px;
       border-radius: 999px;
@@ -169,18 +169,9 @@
       gap: 4px;
       white-space: nowrap;
     }
-    .score-pill--good {
-      background: rgba(22, 163, 74, 0.08);
-      color: var(--green);
-    }
-    .score-pill--bad {
-      background: rgba(220, 38, 38, 0.08);
-      color: var(--red);
-    }
-    .score-pill--neutral {
-      background: rgba(107, 114, 128, 0.08);
-      color: #374151;
-    }
+    .score-pill--good { background: rgba(22, 163, 74, 0.08); color: var(--green); }
+    .score-pill--bad { background: rgba(220, 38, 38, 0.08); color: var(--red); }
+    .score-pill--neutral { background: rgba(107, 114, 128, 0.08); color: #374151; }
 
     /* 신뢰도 배지 */
     .cred-pill{
@@ -194,16 +185,9 @@
       white-space: nowrap;
       border: 1px solid transparent;
     }
-    
     .cred--high{ background: rgba(22,163,74,0.10); color: #15803d; border-color: rgba(22,163,74,0.25); }
     .cred--mid { background: rgba(245,158,11,0.12); color: #92400e; border-color: rgba(245,158,11,0.30); }
     .cred--low { background: rgba(220,38,38,0.10); color: #b91c1c; border-color: rgba(220,38,38,0.25); }
-    
-    .card-header-right{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
 
     .review-text {
       font-size: 0.95rem;
@@ -217,27 +201,15 @@
       color: var(--text-sub);
       margin-bottom: 6px;
     }
-
     .meta-row strong {
       margin-right: 4px;
       color: #4b5563;
     }
 
-    .tag-group {
-      font-size: 0.8rem;
-      margin-top: 4px;
-    }
+    .tag-group { font-size: 0.8rem; margin-top: 4px; }
+    .tag-group-label { font-weight: 600; margin-right: 4px; color: #4b5563; }
 
-    .tag-group-label {
-      font-weight: 600;
-      margin-right: 4px;
-      color: #4b5563;
-    }
-
-    .chip-empty {
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
+    .chip-empty { font-size: 0.8rem; color: #9ca3af; }
 
     .chip {
       display: inline-flex;
@@ -259,12 +231,8 @@
     }
 
     @media (max-width: 640px) {
-      .app {
-        padding: 20px 14px 32px;
-      }
-      .card {
-        padding: 12px 14px;
-      }
+      .app { padding: 20px 14px 32px; }
+      .card { padding: 12px 14px; }
     }
   </style>
 </head>
@@ -273,7 +241,7 @@
     <h1>여행 리뷰 AI 실험 v2</h1>
     <p class="subtitle">
       여러 개의 여행 리뷰를 줄바꿈으로 나눠서 입력해보세요. 간단한 규칙 기반으로
-      점수와 키워드를 분석합니다.
+      점수와 키워드를 분석합니다. (Day2: 신뢰도 점수 포함)
     </p>
 
     <p style="font-size: 0.9rem; color: #6b7280;">
@@ -298,7 +266,7 @@
   </div>
 
   <script>
-    // 1. 점수 계산
+    // 1) 점수(감정) 계산
     function scoreReview(text) {
       text = text.replace(/\s+/g, " ").trim();
       let score = 50;
@@ -325,7 +293,7 @@
       return score;
     }
 
-    // 2. 키워드 추출
+    // 2) 키워드 추출
     function extractKeywords(text) {
       const positive = ["좋", "만족", "편안", "친절", "최고", "기분"];
       const negative = ["별로", "불편", "실망", "비쌌", "소음", "시끄럽", "좁", "더럽"];
@@ -348,54 +316,86 @@
       };
     }
 
-// 3. 고급 요약 문장 (점수 + 키워드 + 신뢰도 반영)
-function summarizeReview(kw, score, credibility) {
-  const posCount = kw.positive.length;
-  const negCount = kw.negative.length;
+    // 3) 신뢰도 점수(0~100)
+    function credibilityScore(text) {
+      let score = 50;
 
-  // 1) 톤(분위기) 문장
-  let toneLabel = "";
-  if (score >= 85 && posCount > negCount) {
-    toneLabel = "매우 만족도가 높은 후기입니다.";
-  } else if (score >= 70 && posCount >= negCount) {
-    toneLabel = "대체로 만족스러운 후기입니다.";
-  } else if (negCount > posCount && score <= 60) {
-    toneLabel = "아쉬운 점이 더 많이 드러나는 후기입니다.";
-  } else if (posCount === 0 && negCount === 0) {
-    toneLabel = "감정 표현이 크지 않은 중립적인 후기입니다.";
-  } else {
-    toneLabel = "좋은 점과 아쉬운 점이 함께 섞여 있는 후기입니다.";
-  }
+      if (text.length < 10) score -= 20;
+      if (text.length > 80) score += 10;
 
-  // 2) 어떤 요소에 대한 후기인지 (위치/서비스/시설/가격)
-  const aspects = [];
-  if (kw.location.length > 0) aspects.push("위치");
-  if (kw.service.length > 0) aspects.push("서비스");
-  if (kw.facility.length > 0) aspects.push("시설");
-  if (kw.price.length > 0) aspects.push("가격");
+      const detailWords = ["가격", "위치", "소음", "침대", "청소", "서비스", "직원", "주차", "지하철"];
+      if (detailWords.some(w => text.includes(w))) score += 10;
 
-  let aspectSentence = "";
-  if (aspects.length === 1) {
-    aspectSentence = `${aspects[0]}에 대한 평가가 중심입니다.`;
-  } else if (aspects.length > 1) {
-    aspectSentence = `${aspects.join(", ")} 등 여러 요소를 함께 평가하고 있습니다.`;
-  }
+      if (/\d/.test(text)) score += 10;
 
-  // 3) 신뢰도에 따른 코멘트
-  let credSentence = "";
-  if (credibility >= 80) {
-    credSentence = "구체적인 정보가 많아 비교적 신뢰할 수 있는 리뷰로 보입니다.";
-  } else if (credibility >= 60) {
-    credSentence = "전체적으로 참고할 만하지만, 세부 정보는 일부 부족할 수 있습니다.";
-  } else {
-    credSentence = "표현이 다소 추상적이어서 신뢰도는 낮은 편입니다.";
-  }
+      const hypeWords = ["정말", "완전", "최고", "최악", "진짜", "엄청"];
+      const hypeCount = hypeWords.filter(w => text.includes(w)).length;
+      if (hypeCount >= 2) score -= 15;
 
-  // 4) 세 문장을 하나의 요약으로 합치기
-  return [toneLabel, aspectSentence, credSentence]
-    .filter(Boolean)      // 빈 문자열 제거
-    .join(" ");
-}
+      const wordSet = new Set(text.split(""));
+      if (wordSet.size < text.length / 2.5) score -= 10;
+
+      if (score > 100) score = 100;
+      if (score < 0) score = 0;
+      return score;
+    }
+
+    // 4) 신뢰도 라벨/클래스
+    function credibilityLabel(c) {
+      if (c >= 80) return "신뢰도 높음";
+      if (c >= 55) return "보통";
+      return "낮음";
+    }
+    function credibilityClass(c) {
+      if (c >= 80) return "cred--high";
+      if (c >= 55) return "cred--mid";
+      return "cred--low";
+    }
+
+    // 5) 점수 이모지
+    function scoreEmoji(score) {
+      if (score >= 80) return "😊";
+      if (score <= 40) return "😟";
+      return "😐";
+    }
+
+    // 6) 요약문 (점수 + 키워드 + 신뢰도)
+    function summarizeReview(kw, score, cred) {
+      const posCount = kw.positive.length;
+      const negCount = kw.negative.length;
+
+      let toneLabel = "";
+      if (score >= 85 && posCount > negCount) toneLabel = "매우 만족도가 높은 후기입니다.";
+      else if (score >= 70 && posCount >= negCount) toneLabel = "대체로 만족스러운 후기입니다.";
+      else if (negCount > posCount && score <= 60) toneLabel = "아쉬운 점이 더 많이 드러나는 후기입니다.";
+      else if (posCount === 0 && negCount === 0) toneLabel = "감정 표현이 크지 않은 중립적인 후기입니다.";
+      else toneLabel = "좋은 점과 아쉬운 점이 함께 섞여 있는 후기입니다.";
+
+      const aspects = [];
+      if (kw.location.length > 0) aspects.push("위치");
+      if (kw.service.length > 0) aspects.push("서비스");
+      if (kw.facility.length > 0) aspects.push("시설");
+      if (kw.price.length > 0) aspects.push("가격");
+
+      let aspectSentence = "";
+      if (aspects.length === 1) aspectSentence = `${aspects[0]}에 대한 평가가 중심입니다.`;
+      else if (aspects.length > 1) aspectSentence = `${aspects.join(", ")} 등 여러 요소를 함께 평가하고 있습니다.`;
+
+      let credSentence = "";
+      if (cred >= 80) credSentence = "구체적인 정보가 많아 비교적 신뢰할 수 있는 리뷰로 보입니다.";
+      else if (cred >= 60) credSentence = "전체적으로 참고할 만하지만, 세부 정보는 일부 부족할 수 있습니다.";
+      else credSentence = "표현이 다소 추상적이어서 신뢰도는 낮은 편입니다.";
+
+      return [toneLabel, aspectSentence, credSentence].filter(Boolean).join(" ");
+    }
+
+    // 7) 태그 렌더링
+    function renderTags(words, bgColor) {
+      if (!words || words.length === 0) return '<span class="chip-empty">없음</span>';
+      return words
+        .map((w) => `<span class="chip" style="background:${bgColor}; border-color:transparent;">${w}</span>`)
+        .join("");
+    }
 
     // 샘플 채우기
     function fillSample() {
@@ -408,68 +408,8 @@ function summarizeReview(kw, score, credibility) {
       ];
       document.getElementById("reviews").value = sampleLines.join("\n");
     }
-    
-    // 이모지 선택
-    function scoreEmoji(score) {
-      if (score >= 80) return "😊";
-      if (score <= 40) return "😟";
-      return "😐";
-    }
-    // JS에 새로운 함수 추가(Day 2 Step 1)
-    function credibilityScore(text) {
-    let score = 50;
 
-    function credibilityLabel(c) {
-      if (c >= 80) return "신뢰도 높음";
-      if (c >= 55) return "보통";
-      return "낮음";
-    }
-    
-    function credibilityClass(c) {
-      if (c >= 80) return "cred--high";
-      if (c >= 55) return "cred--mid";
-      return "cred--low";
-    }
-      
-    // 1) 리뷰 길이 기반
-    if (text.length < 10) score -= 20;
-    if (text.length > 80) score += 10;
-  
-    // 2) 구체적 단어 포함 여부
-    const detailWords = ["가격", "위치", "소음", "침대", "청소", "서비스", "직원", "주차", "지하철"];
-    if (detailWords.some(w => text.includes(w))) score += 10;
-  
-    // 3) 숫자 포함 → 신뢰도 증가
-    if (/\d/.test(text)) score += 10;
-  
-    // 4) 감탄사/강조 부사 반복 → 신뢰도 감소
-    const hypeWords = ["정말", "완전", "최고", "최악", "진짜", "엄청"];
-    let hypeCount = hypeWords.filter(w => text.includes(w)).length;
-    if (hypeCount >= 2) score -= 15;
-  
-    // 5) 동일 단어 반복 → 광고성 리뷰 가능성
-    const wordSet = new Set(text.split(""));
-    if (wordSet.size < text.length / 2.5) score -= 10;
-  
-    if (score > 100) score = 100;
-    if (score < 0) score = 0;
-    return score;
-    }
-
-    function renderTags(words, bgColor) {
-    if (!words || words.length === 0) {
-      return '<span class="chip-empty">없음</span>';
-    }
-  
-    return words
-      .map(
-        (w) =>
-          `<span class="chip" style="background:${bgColor}; border-color:transparent;">${w}</span>`
-      )
-      .join("");
-  }
-    
-    // 5. 전체 분석 + 카드 UI 출력
+    // 8) 전체 분석 + 카드 출력
     function analyzeAll() {
       const raw = document.getElementById("reviews").value.trim();
       const lines = raw
@@ -478,81 +418,58 @@ function summarizeReview(kw, score, credibility) {
         .filter((l) => l.length > 0);
 
       if (lines.length === 0) {
-        document.getElementById("output").innerHTML =
-          "<p>리뷰를 입력해주세요.</p>";
+        document.getElementById("output").innerHTML = "<p>리뷰를 입력해주세요.</p>";
         return;
       }
 
       let totalScore = 0;
       let totalLength = 0;
-      let totalCred = 0;    // 🆕 신뢰도 합계
+      let totalCred = 0;
       let cardsHtml = "";
 
       lines.forEach((review, idx) => {
         const score = scoreReview(review);
+        const cred = credibilityScore(review);
         const kw = extractKeywords(review);
         const length = review.length;
-        const summary = summarizeReview(kw, score, credibility); // ✅ 여기 수정!
-        const cred = credibilityScore(review);
-
+        const summary = summarizeReview(kw, score, cred);
 
         totalScore += score;
         totalLength += length;
-        totalCred += credibility;                       // 🆕 신뢰도 합산
+        totalCred += cred;
 
         let moodClass = "card--neutral";
         let scoreClass = "score-pill--neutral";
-        if (score >= 75) {
-          moodClass = "card--good";
-          scoreClass = "score-pill--good";
-        } else if (score <= 50) {
-          moodClass = "card--bad";
-          scoreClass = "score-pill--bad";
-        }
+        if (score >= 75) { moodClass = "card--good"; scoreClass = "score-pill--good"; }
+        else if (score <= 50) { moodClass = "card--bad"; scoreClass = "score-pill--bad"; }
 
         cardsHtml += `
           <article class="card ${moodClass}">
             <header class="card-header">
               <div class="card-title">리뷰 #${idx + 1}</div>
-              <div class="score-pill ${scoreClass}">
-                ${score}점 ${scoreEmoji(score)}
-              </div>       
+
+              <div class="card-header-right">
+                <div class="cred-pill ${credibilityClass(cred)}">
+                  ${cred}점 · ${credibilityLabel(cred)}
+                </div>
+
+                <div class="score-pill ${scoreClass}">
+                  ${score}점 ${scoreEmoji(score)}
+                </div>
+              </div>
             </header>
 
             <div class="review-text">${review}</div>
 
-            <div class="meta-row">
-              <strong>글자수</strong> ${length}자
-            </div>
-            <div class="meta-row">                       
-              <strong>신뢰도</strong> ${cred}점
-            </div>
+            <div class="meta-row"><strong>글자수</strong> ${length}자</div>
 
             <div class="tag-group">
-              <div><span class="tag-group-label">긍정</span>${renderTags(
-                kw.positive,
-                "#e6f4ea"
-              )}</div>
-              <div><span class="tag-group-label">부정</span>${renderTags(
-                kw.negative,
-                "#fdecea"
-              )}</div>
-              <div><span class="tag-group-label">시설</span>${renderTags(
-                kw.facility,
-                "#e8f0fe"
-              )}</div>
-              <div><span class="tag-group-label">서비스</span>${renderTags(
-                kw.service,
-                "#fff4e5"
-              )}</div>
-              <div><span class="tag-group-label">위치</span>${renderTags(
-                kw.location,
-                "#e0f7fa"
-              )}</div>
-              <div><span class="tag-group-label">가격</span>${renderTags(
-                kw.price,
-                "#f3e5f5"
-              )}</div>
+              <div><span class="tag-group-label">긍정</span>${renderTags(kw.positive, "#e6f4ea")}</div>
+              <div><span class="tag-group-label">부정</span>${renderTags(kw.negative, "#fdecea")}</div>
+              <div><span class="tag-group-label">시설</span>${renderTags(kw.facility, "#e8f0fe")}</div>
+              <div><span class="tag-group-label">서비스</span>${renderTags(kw.service, "#fff4e5")}</div>
+              <div><span class="tag-group-label">위치</span>${renderTags(kw.location, "#e0f7fa")}</div>
+              <div><span class="tag-group-label">가격</span>${renderTags(kw.price, "#f3e5f5")}</div>
             </div>
 
             <div class="card-summary">${summary}</div>
@@ -562,14 +479,14 @@ function summarizeReview(kw, score, credibility) {
 
       const avgScore = Math.round(totalScore / lines.length);
       const avgLength = Math.round(totalLength / lines.length);
-      const avgCred = Math.round(totalCred / lines.length);   // 🆕 추가
+      const avgCred = Math.round(totalCred / lines.length);
 
       document.getElementById("output").innerHTML = `
         <div class="summary-bar">
-          총 ${lines.length}개의 리뷰, 
+          총 ${lines.length}개의 리뷰,
           평균 점수: <strong>${avgScore}점</strong>,
           평균 리뷰 길이: <strong>${avgLength}글자</strong>,
-          평균 신뢰도: <strong>${avgCred}점</strong>   <!-- 🆕 표시 -->
+          평균 신뢰도: <strong>${avgCred}점</strong>
         </div>
         ${cardsHtml}
       `;
