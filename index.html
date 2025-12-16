@@ -259,6 +259,14 @@
       <button type="button" class="btn-primary" onclick="analyzeAll()">
         모두 분석하기
       </button>
+     <select id="sortMode" onchange="renderResults()">
+      <option value="score_desc">점수 높은 순</option>
+      <option value="score_asc">점수 낮은 순</option>
+      <option value="cred_desc">신뢰도 높은 순</option>
+      <option value="cred_asc">신뢰도 낮은 순</option>
+      <option value="len_desc">글자수 긴 순</option>
+      <option value="len_asc">글자수 짧은 순</option>
+     </select>
     </div>
 
     <h2>결과:</h2>
@@ -266,6 +274,9 @@
   </div>
 
   <script>
+      let lastResults = [];   // 마지막 분석 결과 저장
+      let lastStats = null;   // 평균 등 요약정보 저장
+       
     // 1) 점수(감정) 계산
     function scoreReview(text) {
       text = text.replace(/\s+/g, " ").trim();
@@ -439,6 +450,8 @@
       let totalCred = 0;
       let cardsHtml = "";
 
+      lastResults = [];
+
       lines.forEach((review, idx) => {
         const score = scoreReview(review);
         const cred = credibilityScore(review);
@@ -446,6 +459,15 @@
         const length = review.length;
         const summary = summarizeReview(kw, score, cred);
         const avgCred = Math.round(totalCred / lines.length);
+
+        lastResults.push({
+        idx: idx + 1,
+        review,
+        score,
+        cred,
+        length,
+        kw,
+        summary
 
         totalScore += score;
         totalLength += length;
@@ -493,6 +515,77 @@
       const avgScore = Math.round(totalScore / lines.length);
       const avgLength = Math.round(totalLength / lines.length);
       const avgCred = Math.round(totalCred / lines.length);
+
+      lastStats = { count: lines.length, avgScore, avgLength, avgCred };
+
+      renderResults(); // ✅ 여기서 렌더
+
+      function renderResults() {
+      if (!lastResults || lastResults.length === 0) return;
+    
+      const mode = document.getElementById("sortMode")?.value || "score_desc";
+    
+      const sorted = [...lastResults].sort((a, b) => {
+        switch (mode) {
+          case "score_desc": return b.score - a.score;
+          case "score_asc":  return a.score - b.score;
+          case "cred_desc":  return b.cred - a.cred;
+          case "cred_asc":   return a.cred - b.cred;
+          case "len_desc":   return b.length - a.length;
+          case "len_asc":    return a.length - b.length;
+          default: return 0;
+        }
+      });
+    
+      let cardsHtml = "";
+    
+      sorted.forEach((item) => {
+        const { review, score, cred, length, kw, summary, idx } = item;
+    
+        let moodClass = "card--neutral";
+        let scoreClass = "score-pill--neutral";
+        if (score >= 75) { moodClass = "card--good"; scoreClass = "score-pill--good"; }
+        else if (score <= 50) { moodClass = "card--bad"; scoreClass = "score-pill--bad"; }
+    
+        cardsHtml += `
+          <article class="card ${moodClass}">
+            <header class="card-header">
+              <div class="card-title">리뷰 #${idx}</div>
+              <div class="score-pill ${scoreClass}">
+                ${score}점 ${scoreEmoji(score)}
+              </div>
+            </header>
+    
+            <div class="review-text">${review}</div>
+    
+            <div class="meta-row"><strong>글자수</strong> ${length}자</div>
+            <div class="meta-row"><strong>신뢰도</strong> ${cred}점</div>
+    
+            <div class="tag-group">
+              <div><span class="tag-group-label">긍정</span>${renderTags(kw.positive, "#e6f4ea")}</div>
+              <div><span class="tag-group-label">부정</span>${renderTags(kw.negative, "#fdecea")}</div>
+              <div><span class="tag-group-label">시설</span>${renderTags(kw.facility, "#e8f0fe")}</div>
+              <div><span class="tag-group-label">서비스</span>${renderTags(kw.service, "#fff4e5")}</div>
+              <div><span class="tag-group-label">위치</span>${renderTags(kw.location, "#e0f7fa")}</div>
+              <div><span class="tag-group-label">가격</span>${renderTags(kw.price, "#f3e5f5")}</div>
+            </div>
+    
+            <div class="card-summary">${summary}</div>
+          </article>
+        `;
+      });
+
+  document.getElementById("output").innerHTML = `
+    <div class="summary-bar">
+      총 ${lastStats.count}개의 리뷰,
+      평균 점수: <strong>${lastStats.avgScore}점</strong>,
+      평균 리뷰 길이: <strong>${lastStats.avgLength}글자</strong>,
+      평균 신뢰도: <strong>${lastStats.avgCred}점</strong>
+    </div>
+    ${cardsHtml}
+  `;
+}
+
 
       document.getElementById("output").innerHTML = `
         <div class="summary-bar">
