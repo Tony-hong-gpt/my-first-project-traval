@@ -1,2 +1,2 @@
-# my-first-project-traval
-truely traval information
+# my-first-project-travel
+truely travel information
