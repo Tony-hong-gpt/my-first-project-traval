@@ -445,6 +445,7 @@
         const kw = extractKeywords(review);
         const length = review.length;
         const summary = summarizeReview(kw, score, cred);
+        const avgCred = Math.round(totalCred / lines.length);
 
         totalScore += score;
         totalLength += length;
