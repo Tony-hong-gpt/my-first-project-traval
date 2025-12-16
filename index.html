@@ -325,47 +325,54 @@
       };
     }
 
-    // 3. 요약 문장
-    function summarizeReview(kw, score) {
-      let tone = "";
+// 3. 고급 요약 문장 (점수 + 키워드 + 신뢰도 반영)
+function summarizeReview(kw, score, credibility) {
+  const posCount = kw.positive.length;
+  const negCount = kw.negative.length;
 
-      if (kw.positive.length > 0 && kw.negative.length === 0) {
-        tone = "전반적으로 긍정적인 리뷰입니다.";
-      } else if (kw.negative.length > 0 && kw.positive.length === 0) {
-        tone = "전반적으로 부정적인 리뷰입니다.";
-      } else if (kw.positive.length > 0 && kw.negative.length > 0) {
-        tone = "좋은 점과 아쉬운 점이 함께 있는 리뷰입니다.";
-      } else {
-        tone = "감정 표현이 뚜렷하지 않은 리뷰입니다.";
-      }
+  // 1) 톤(분위기) 문장
+  let toneLabel = "";
+  if (score >= 85 && posCount > negCount) {
+    toneLabel = "매우 만족도가 높은 후기입니다.";
+  } else if (score >= 70 && posCount >= negCount) {
+    toneLabel = "대체로 만족스러운 후기입니다.";
+  } else if (negCount > posCount && score <= 60) {
+    toneLabel = "아쉬운 점이 더 많이 드러나는 후기입니다.";
+  } else if (posCount === 0 && negCount === 0) {
+    toneLabel = "감정 표현이 크지 않은 중립적인 후기입니다.";
+  } else {
+    toneLabel = "좋은 점과 아쉬운 점이 함께 섞여 있는 후기입니다.";
+  }
 
-      const aspects = [];
-      if (kw.location.length > 0) aspects.push("위치");
-      if (kw.service.length > 0) aspects.push("서비스");
-      if (kw.facility.length > 0) aspects.push("시설");
-      if (kw.price.length > 0) aspects.push("가격");
+  // 2) 어떤 요소에 대한 후기인지 (위치/서비스/시설/가격)
+  const aspects = [];
+  if (kw.location.length > 0) aspects.push("위치");
+  if (kw.service.length > 0) aspects.push("서비스");
+  if (kw.facility.length > 0) aspects.push("시설");
+  if (kw.price.length > 0) aspects.push("가격");
 
-      let aspectText = "";
-      if (aspects.length > 0) {
-        aspectText = aspects.join(", ") + "에 대한 내용입니다.";
-      }
+  let aspectSentence = "";
+  if (aspects.length === 1) {
+    aspectSentence = `${aspects[0]}에 대한 평가가 중심입니다.`;
+  } else if (aspects.length > 1) {
+    aspectSentence = `${aspects.join(", ")} 등 여러 요소를 함께 평가하고 있습니다.`;
+  }
 
-      return (tone + " " + aspectText).trim();
-    }
+  // 3) 신뢰도에 따른 코멘트
+  let credSentence = "";
+  if (credibility >= 80) {
+    credSentence = "구체적인 정보가 많아 비교적 신뢰할 수 있는 리뷰로 보입니다.";
+  } else if (credibility >= 60) {
+    credSentence = "전체적으로 참고할 만하지만, 세부 정보는 일부 부족할 수 있습니다.";
+  } else {
+    credSentence = "표현이 다소 추상적이어서 신뢰도는 낮은 편입니다.";
+  }
 
-    // 4. 태그 렌더링 (칩 스타일)
-    function renderTags(words, bgColor) {
-      if (!words || words.length === 0) {
-        return '<span class="chip-empty">없음</span>';
-      }
-
-      return words
-        .map(
-          (w) =>
-            `<span class="chip" style="background:${bgColor}; border-color:transparent;">${w}</span>`
-        )
-        .join("");
-    }
+  // 4) 세 문장을 하나의 요약으로 합치기
+  return [toneLabel, aspectSentence, credSentence]
+    .filter(Boolean)      // 빈 문자열 제거
+    .join(" ");
+}
 
     // 샘플 채우기
     function fillSample() {
@@ -437,8 +444,8 @@
         const score = scoreReview(review);
         const kw = extractKeywords(review);
         const length = review.length;
-        const summary = summarizeReview(kw, score);
         const credibility = credibilityScore(review);   // 🆕 이 줄 추가
+        const summary = summarizeReview(kw, score, credibility); // ✅ 여기 수정!
 
         totalScore += score;
         totalLength += length;
