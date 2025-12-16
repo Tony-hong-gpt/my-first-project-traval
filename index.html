@@ -242,9 +242,9 @@
 
 <body>
   <div class="app">
-    <h1>여행 리뷰 AI 실험 v2</h1>
+    <h1>여행 리뷰 분석 실험 v2</h1>
     <p class="subtitle">
-      여러 개의 여행 리뷰를 줄바꿈으로 나눠서 입력해보세요. (Day2: 신뢰도 + 정렬)
+      여러 개의 여행 리뷰를 줄바꿈으로 나눠서 입력해보세요. (Day2: 신뢰도 + 정렬 + 필터 + 저장)
     </p>
 
     <p style="font-size: 0.9rem; color: #6b7280;">
@@ -259,13 +259,20 @@
       <button type="button" class="btn-secondary" onclick="fillSample()">샘플 리뷰 불러오기</button>
       <button type="button" class="btn-primary" onclick="analyzeAll()">모두 분석하기</button>
 
-      <select id="sortMode" onchange="renderResults()">
+      <select id="sortMode" onchange="onUiChange()">
         <option value="score_desc">점수 높은 순</option>
         <option value="score_asc">점수 낮은 순</option>
         <option value="cred_desc">신뢰도 높은 순</option>
         <option value="cred_asc">신뢰도 낮은 순</option>
         <option value="len_desc">글자수 긴 순</option>
         <option value="len_asc">글자수 짧은 순</option>
+      </select>
+
+      <select id="filterMode" onchange="onUiChange()">
+        <option value="all">전체</option>
+        <option value="pos_only">긍정만</option>
+        <option value="neg_only">부정만</option>
+        <option value="cred_low">신뢰도 낮음(55 미만)</option>
       </select>
     </div>
 
@@ -276,6 +283,33 @@
   <script>
     let lastResults = [];
     let lastStats = null;
+
+    const STORAGE_KEY = "travelReviewUI_v2";
+
+    function saveUiState() {
+      const sortMode = document.getElementById("sortMode")?.value || "score_desc";
+      const filterMode = document.getElementById("filterMode")?.value || "all";
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ sortMode, filterMode }));
+    }
+
+    function loadUiState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const { sortMode, filterMode } = JSON.parse(raw);
+
+        const s = document.getElementById("sortMode");
+        const f = document.getElementById("filterMode");
+
+        if (s && sortMode) s.value = sortMode;
+        if (f && filterMode) f.value = filterMode;
+      } catch (e) {}
+    }
+
+    function onUiChange() {
+      saveUiState();
+      renderResults();
+    }
 
     function scoreReview(text) {
       text = text.replace(/\s+/g, " ").trim();
@@ -451,13 +485,30 @@
       renderResults();
     }
 
+    function applyFilter(items) {
+      const mode = document.getElementById("filterMode")?.value || "all";
+
+      if (mode === "pos_only") {
+        return items.filter(x => x.kw.positive.length > 0 && x.kw.negative.length === 0);
+      }
+      if (mode === "neg_only") {
+        return items.filter(x => x.kw.negative.length > 0 && x.kw.positive.length === 0);
+      }
+      if (mode === "cred_low") {
+        return items.filter(x => x.cred < 55);
+      }
+      return items; // all
+    }
+
     function renderResults() {
       if (!lastResults || lastResults.length === 0 || !lastStats) return;
 
-      const mode = document.getElementById("sortMode")?.value || "score_desc";
+      const sortMode = document.getElementById("sortMode")?.value || "score_desc";
 
-      const sorted = [...lastResults].sort((a, b) => {
-        switch (mode) {
+      let view = applyFilter([...lastResults]);
+
+      view.sort((a, b) => {
+        switch (sortMode) {
           case "score_desc": return b.score - a.score;
           case "score_asc":  return a.score - b.score;
           case "cred_desc":  return b.cred - a.cred;
@@ -470,7 +521,7 @@
 
       let cardsHtml = "";
 
-      sorted.forEach((item) => {
+      view.forEach((item) => {
         const { review, score, cred, length, kw, summary, idx } = item;
 
         let moodClass = "card--neutral";
@@ -506,16 +557,32 @@
         `;
       });
 
+      const filterMode = document.getElementById("filterMode")?.value || "all";
+      const filterText = {
+        all: "전체",
+        pos_only: "긍정만",
+        neg_only: "부정만",
+        cred_low: "신뢰도 낮음(55 미만)"
+      }[filterMode];
+
       document.getElementById("output").innerHTML = `
         <div class="summary-bar">
+          (표시: <strong>${filterText}</strong>)
           총 ${lastStats.count}개의 리뷰,
           평균 점수: <strong>${lastStats.avgScore}점</strong>,
           평균 리뷰 길이: <strong>${lastStats.avgLength}글자</strong>,
           평균 신뢰도: <strong>${lastStats.avgCred}점</strong>
+          <br/>
+          현재 필터 결과: <strong>${view.length}개</strong>
         </div>
-        ${cardsHtml}
+        ${cardsHtml || "<p>필터 조건에 맞는 리뷰가 없습니다.</p>"}
       `;
     }
+
+    // 페이지 로드시 정렬/필터 복원
+    window.addEventListener("DOMContentLoaded", () => {
+      loadUiState();
+    });
   </script>
 </body>
 </html>
