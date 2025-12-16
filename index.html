@@ -530,8 +530,7 @@
         default: return { key: "misc", label: "기타", cls: "cat--misc" };
       }
     }
-
-    
+  
     function credibilityScore(text) {
       let score = 50;
 
@@ -623,6 +622,9 @@
     }
 
     function analyzeAll() {
+      lastResults = [];     // ✅ 누적 방지
+      lastStats = null;     // (선택) 통계도 새로 계산
+      
       const raw = document.getElementById("reviews").value.trim();
       const lines = raw.split(/\n+/).map(l => l.trim()).filter(Boolean);
 
